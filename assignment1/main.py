@@ -19,6 +19,17 @@ class Version:
             self.patch = int(match.group(3))
             self.prerelease = self._parse_identifiers(match.group(4))
             self.build = match.group(5)
+        else:
+            import re
+            m = re.match(r"(\d+)\.(\d+)\.(\d+)([a-zA-Z].*)?$", version)
+            if not m:
+                raise ValueError(f"Invalid version: {version}")
+            self.major = int(m.group(1))
+            self.minor = int(m.group(2))
+            self.patch = int(m.group(3))
+            suffix = m.group(4)
+            self.prerelease = [suffix] if suffix else []
+            self.build = None
 
     @staticmethod
     def _parse_identifiers(identifiers):
