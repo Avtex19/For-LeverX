@@ -17,7 +17,14 @@ class Version:
             self.major = int(match.group(1))
             self.minor = int(match.group(2))
             self.patch = int(match.group(3))
+            self.prerelease = self._parse_identifiers(match.group(4))
+            self.build = match.group(5)
 
+    @staticmethod
+    def _parse_identifiers(identifiers):
+        if identifiers is None:
+            return []
+        return identifiers.split(".")
 
 
 def main():
