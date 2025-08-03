@@ -37,6 +37,25 @@ class Version:
             return []
         return identifiers.split(".")
 
+    def __eq__(self, other):
+        return (
+                (self.major, self.minor, self.patch, self.prerelease)
+                == (other.major, other.minor, other.patch, other.prerelease)
+        )
+
+    def __lt__(self, other):
+        if (self.major, self.minor, self.patch) != (other.major, other.minor, other.patch):
+            return (self.major, self.minor, self.patch) < (other.major, other.minor, other.patch)
+
+        if not self.prerelease and other.prerelease:
+            return False
+        if self.prerelease and not other.prerelease:
+            return True
+        if not self.prerelease and not other.prerelease:
+            return False
+
+        return self._compare_identifiers(self.prerelease, other.prerelease) < 0
+
 
 def main():
     to_test = [
