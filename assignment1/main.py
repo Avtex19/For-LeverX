@@ -37,10 +37,26 @@ class Version:
             return []
         return identifiers.split(".")
 
+    def _compare_identifiers(self, this_ids, other_ids):
+        for a, b in zip(this_ids, other_ids):
+            if a == b:
+                continue
+            a_is_num = a.isdigit()
+            b_is_num = b.isdigit()
+            if a_is_num and b_is_num:
+                return int(a) - int(b)
+            elif a_is_num:
+                return -1
+            elif b_is_num:
+                return 1
+            else:
+                return (a > b) - (a < b)
+        return len(this_ids) - len(other_ids)
+
     def __eq__(self, other):
         return (
-                (self.major, self.minor, self.patch, self.prerelease)
-                == (other.major, other.minor, other.patch, other.prerelease)
+            (self.major, self.minor, self.patch, self.prerelease)
+            == (other.major, other.minor, other.patch, other.prerelease)
         )
 
     def __lt__(self, other):
