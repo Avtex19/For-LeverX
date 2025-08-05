@@ -20,7 +20,6 @@ class Version:
             self.prerelease = self._parse_identifiers(match.group(4))
             self.build = match.group(5)
         else:
-            import re
             m = re.match(r"(\d+)\.(\d+)\.(\d+)([a-zA-Z].*)?$", version)
             if not m:
                 raise ValueError(f"Invalid version: {version}")
