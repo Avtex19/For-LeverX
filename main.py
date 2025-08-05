@@ -10,25 +10,30 @@ class Version:
         r"(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$"
     )
 
+    _fallback_regex = re.compile(r"(\d+)\.(\d+)\.(\d+)([a-zA-Z].*)?$")
+
     def __init__(self, version: str):
         self.original = version
         match = self._semver_regex.fullmatch(version)
         if match:
-            self.major = int(match.group(1))
-            self.minor = int(match.group(2))
-            self.patch = int(match.group(3))
-            self.prerelease = self._parse_identifiers(match.group(4))
-            self.build = match.group(5)
+            self._init_from_match(match, is_fallback=False)
         else:
-            m = re.match(r"(\d+)\.(\d+)\.(\d+)([a-zA-Z].*)?$", version)
-            if not m:
+            match = self._fallback_regex.fullmatch(version)
+            if not match:
                 raise ValueError(f"Invalid version: {version}")
-            self.major = int(m.group(1))
-            self.minor = int(m.group(2))
-            self.patch = int(m.group(3))
-            suffix = m.group(4)
+            self._init_from_match(match, is_fallback=True)
+
+    def _init_from_match(self, match, is_fallback):
+        self.major = int(match.group(1))
+        self.minor = int(match.group(2))
+        self.patch = int(match.group(3))
+        if is_fallback:
+            suffix = match.group(4)
             self.prerelease = [suffix] if suffix else []
             self.build = None
+        else:
+            self.prerelease = self._parse_identifiers(match.group(4))
+            self.build = match.group(5)
 
     @staticmethod
     def _parse_identifiers(identifiers):
@@ -54,8 +59,8 @@ class Version:
 
     def __eq__(self, other):
         return (
-            (self.major, self.minor, self.patch, self.prerelease)
-            == (other.major, other.minor, other.patch, other.prerelease)
+                (self.major, self.minor, self.patch, self.prerelease)
+                == (other.major, other.minor, other.patch, other.prerelease)
         )
 
     def __lt__(self, other):
@@ -80,12 +85,20 @@ def main():
         ("1.1.0-alpha", "1.2.0-alpha.1"),
         ("1.0.1b", "1.0.10-alpha.beta"),
         ("1.0.0-rc.1", "1.0.0"),
+        ("1.0.0-alpha", "1.0.0-alpha.1"),
+        ("1.0.0-alpha.1", "1.0.0-alpha.beta"),
+        ("1.0.0-alpha.beta", "1.0.0-beta"),
+        ("1.0.0-beta", "1.0.0-beta.2"),
+        ("1.0.0-beta.2", "1.0.0-beta.11"),
+        ("1.0.0-beta.11", "1.0.0-rc.1"),
+        ("1.0.0-rc.1", "1.0.0"),
+
     ]
 
     for left, right in to_test:
-        assert Version(left) < Version(right), "le failed"
-        assert Version(right) > Version(left), "ge failed"
-        assert Version(right) != Version(left), "neq failed"
+        assert Version(left) < Version(right), f"Expected {left} < {right}"
+        assert Version(right) > Version(left), f"Expected {right} > {left}"
+        assert Version(right) != Version(left), f"Expected {right} != {left}"
 
 
 if __name__ == "__main__":
